@@ -57,7 +57,7 @@ Browser (React SPA)
 - **The anon key can read nothing.** Every table has row-level security, and the only policies are for signed-in teachers.
 - **Candidates never touch the database directly.** The `/api` functions check the Candidate ID, time window and attempt state on every request.
 - **Teachers must be on an allow-list.** A teacher needs both a Supabase Auth account and a row in `public.teachers`. Signing up alone grants nothing.
-- **`SUPABASE_SERVICE_ROLE_KEY` and `OPENAI_API_KEY` stay on the server.** Only `VITE_*` variables are bundled into the browser.
+- **`SUPABASE_SECRET_KEY` and `OPENAI_API_KEY` stay on the server.** Only `VITE_*` variables are bundled into the browser.
 
 ---
 
@@ -78,7 +78,7 @@ Browser (React SPA)
       select id, 'Your Name' from auth.users where email = 'you@example.com';
       ```
 4. **Recommended:** turn off open sign-ups under **Authentication → Sign In / Providers**.
-5. **Copy your keys** from **Project Settings → API**: the Project URL, the anon (or publishable) key, and the service_role key.
+5. **Copy your keys** from **Project Settings → API Keys**: the Project URL, the publishable key (`sb_publishable_…`) and the secret key (`sb_secret_…`). Legacy anon and service_role keys also work.
 
 ### 2. Vercel
 1. Go to [vercel.com/new](https://vercel.com/new) and import this GitHub repository. The Vite preset and build settings are picked up from `vercel.json` automatically.
@@ -87,12 +87,12 @@ Browser (React SPA)
    | Name | Value |
    | --- | --- |
    | `VITE_SUPABASE_URL` | Supabase Project URL |
-   | `VITE_SUPABASE_ANON_KEY` | Supabase anon / publishable key |
+   | `VITE_SUPABASE_PUBLISHABLE_KEY` | Supabase publishable key (`sb_publishable_…`) |
    | `SUPABASE_URL` | Supabase Project URL |
-   | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service_role key (**secret**) |
+   | `SUPABASE_SECRET_KEY` | Supabase secret key (`sb_secret_…`, **keep private**) |
    | `OPENAI_API_KEY` | *(optional)* enables AI features |
 
-   If you use the **Vercel ↔ Supabase integration** instead, it sets `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`. The app reads those too.
+   If you use the **Vercel ↔ Supabase integration** instead, the variables it sets (`NEXT_PUBLIC_SUPABASE_*`, `SUPABASE_URL`, `SUPABASE_SECRET_KEY` or `SUPABASE_SERVICE_ROLE_KEY`) are read as well.
 3. Click **Deploy**. If you change a `VITE_*` variable later, redeploy, because those values are baked in at build time.
 
 ### 3. Try it

@@ -78,7 +78,7 @@ export const TeacherDashboard: React.FC<Props> = ({ onBackToHome }) => {
     return (
       <Shell onBackToHome={onBackToHome}>
         <p role="alert" className="text-xl bg-amber-950 border-2 border-amber-400 p-4 rounded-lg">
-          The Teacher portal needs Supabase. Set <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code> and redeploy.
+          The Teacher portal needs Supabase. Set <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_PUBLISHABLE_KEY</code> and redeploy.
         </p>
       </Shell>
     );
