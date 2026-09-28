@@ -96,6 +96,7 @@ Browser (React SPA)
 3. Click **Deploy**. If you change a `VITE_*` variable later, redeploy, because those values are baked in at build time.
 
 ### 3. Try it
+- **Health check:** open `https://<your-app>.vercel.app/api/health`. It should show `"ok": true`. If a setting shows `false`, add it in Vercel and redeploy.
 - **Exam Mode:** use `EXM-2026-A7K92`, `EXM-2026-B4P81` or `EXM-2026-K9X32`. Each ID can sit the exam once; you can reset it from Teacher portal → Candidate IDs.
 - **Teacher portal:** sign in with the teacher account from step 1.3.
 
