@@ -1,92 +1,115 @@
-import React, { useState } from 'react';
-import { HomePage } from './pages/Home/HomePage';
-import { ExamVerification } from './pages/ExamVerification/ExamVerification';
-import { ExamEngine } from './pages/Exam/ExamEngine';
-import { PracticeEngine } from './pages/Practice/PracticeEngine';
-import { ResultPage } from './pages/Result/ResultPage';
-import { TeacherDashboard } from './pages/Teacher/TeacherDashboard';
+import React, { useEffect, useRef, useState } from 'react';
+import { HomePage } from './pages/Home';
+import { ExamVerification } from './pages/Verification';
+import { ExamInstructions } from './pages/ExamInstructions';
+import { ExamPlatform } from './pages/ExamPlatform';
+import { PracticeEngine } from './pages/PracticePlatform';
+import { ResultPage } from './pages/Results';
+import { TeacherDashboard } from './pages/TeacherDashboard';
 import { AccessibilityControlCenter } from './components/accessibility/AccessibilityControlCenter';
-import { AccessibilitySettings, Candidate, Exam } from './types';
+import type { ExamSession, SubmitResult, VerifyResult } from './types';
+
+type Screen = 'home' | 'verify' | 'instructions' | 'exam' | 'practice' | 'result' | 'teacher';
+
+const TITLES: Record<Screen, string> = {
+  home: 'Home',
+  verify: 'Enter Candidate ID',
+  instructions: 'Exam Instructions',
+  exam: 'Examination in Progress',
+  practice: 'Practice Mode',
+  result: 'Exam Results',
+  teacher: 'Teacher Portal',
+};
 
 export const App: React.FC = () => {
-  const [currentMode, setCurrentMode] = useState<'home' | 'verify' | 'exam' | 'practice' | 'result' | 'teacher'>('home');
-  const [activeCandidate, setActiveCandidate] = useState<Candidate | null>(null);
-  const [activeExam, setActiveExam] = useState<Exam | null>(null);
-  const [finalScore, setFinalScore] = useState<number>(0);
-  const [totalMarks, setTotalMarks] = useState<number>(0);
+  const [screen, setScreen] = useState<Screen>('home');
+  const [verified, setVerified] = useState<VerifyResult | null>(null);
+  const [session, setSession] = useState<ExamSession | null>(null);
+  const [result, setResult] = useState<SubmitResult | null>(null);
+  const isFirstRender = useRef(true);
 
-  const [accessibilitySettings, setAccessibilitySettings] = useState<AccessibilitySettings>({
-    fontSize: 'large',
-    highContrast: true,
-    voiceSpeed: 1.0,
-    voicePitch: 1.0,
-    language: 'English',
-    screenReaderOptimized: true,
-  });
+  // Give each screen a title and move focus to its heading, like a page load would.
+  useEffect(() => {
+    document.title = `${TITLES[screen]} · AI Accessible Exam Platform`;
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    window.scrollTo(0, 0);
+    requestAnimationFrame(() => document.querySelector<HTMLElement>('main h1')?.focus());
+  }, [screen]);
 
-  const handleVerificationSuccess = (candidate: Candidate, exam: Exam) => {
-    setActiveCandidate(candidate);
-    setActiveExam(exam);
-    setCurrentMode('exam');
-  };
-
-  const handleExamComplete = (score: number, total: number) => {
-    setFinalScore(score);
-    setTotalMarks(total);
-    setCurrentMode('result');
+  const goHome = () => {
+    setVerified(null);
+    setSession(null);
+    setResult(null);
+    setScreen('home');
   };
 
   return (
-    <div className={`min-h-screen ${accessibilitySettings.highContrast ? 'bg-black text-yellow-300' : 'bg-slate-900 text-white'}`}>
+    <div className="min-h-screen bg-slate-950 text-white">
+      <a
+        href="#main-content"
+        className="sr-only-focusable fixed top-3 left-3 z-50 bg-yellow-400 text-black font-bold px-4 py-2 rounded-lg"
+      >
+        Skip to main content
+      </a>
+
       {/* Floating Global Accessibility Bar */}
-      <AccessibilityControlCenter
-        settings={accessibilitySettings}
-        onUpdateSettings={setAccessibilitySettings}
-      />
+      <AccessibilityControlCenter />
 
-      {currentMode === 'home' && (
+      {screen === 'home' && (
         <HomePage
-          onSelectExamMode={() => setCurrentMode('verify')}
-          onSelectPracticeMode={() => setCurrentMode('practice')}
-          onSelectTeacherMode={() => setCurrentMode('teacher')}
+          onSelectExamMode={() => setScreen('verify')}
+          onSelectPracticeMode={() => setScreen('practice')}
+          onSelectTeacherMode={() => setScreen('teacher')}
         />
       )}
 
-      {currentMode === 'verify' && (
+      {screen === 'verify' && (
         <ExamVerification
-          onVerified={handleVerificationSuccess}
-          onBack={() => setCurrentMode('home')}
+          onVerified={(v) => {
+            setVerified(v);
+            setScreen('instructions');
+          }}
+          onBack={goHome}
         />
       )}
 
-      {currentMode === 'exam' && activeCandidate && activeExam && (
-        <ExamEngine
-          candidate={activeCandidate}
-          exam={activeExam}
-          settings={accessibilitySettings}
-          onComplete={handleExamComplete}
+      {screen === 'instructions' && verified && (
+        <ExamInstructions
+          verified={verified}
+          onStarted={(s) => {
+            setSession(s);
+            setScreen('exam');
+          }}
+          onBack={goHome}
         />
       )}
 
-      {currentMode === 'practice' && (
-        <PracticeEngine
-          settings={accessibilitySettings}
-          onBackToHome={() => setCurrentMode('home')}
+      {screen === 'exam' && session && (
+        <ExamPlatform
+          session={session}
+          onComplete={(r) => {
+            setResult(r);
+            setScreen('result');
+          }}
         />
       )}
 
-      {currentMode === 'result' && activeCandidate && (
+      {screen === 'practice' && <PracticeEngine onBackToHome={goHome} />}
+
+      {screen === 'result' && session && result && (
         <ResultPage
-          candidateName={activeCandidate.full_name}
-          score={finalScore}
-          totalMarks={totalMarks}
-          onReturnHome={() => setCurrentMode('home')}
+          candidateName={session.candidate.fullName}
+          examTitle={session.exam.title}
+          attemptId={session.attempt.id}
+          result={result}
+          onReturnHome={goHome}
         />
       )}
 
-      {currentMode === 'teacher' && (
-        <TeacherDashboard onBackToHome={() => setCurrentMode('home')} />
-      )}
+      {screen === 'teacher' && <TeacherDashboard onBackToHome={goHome} />}
     </div>
   );
 };
